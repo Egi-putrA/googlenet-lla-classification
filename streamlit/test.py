@@ -4,22 +4,6 @@ import tensorflow as tf
 import cv2
 import numpy as np
 
-images = []
-image_names = []
-for img in os.listdir('data_test'):
-    image = cv2.imread(f'data_test/{img}')
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = image
-    
-    images.append(image)
-    image_names.append(f'data_test/{img}')
-
-# img_tensor = tf.convert_to_tensor(images, dtype=tf.float32)
-img_tensor = np.array(images, dtype=np.uint8)
-
-print(img_tensor.shape)
-print(image_names)
-
 loaded = tf.saved_model.load('googlenet_model/original_data')
 
 print(list(loaded.signatures.keys()))
@@ -27,9 +11,24 @@ print(list(loaded.signatures.keys()))
 infer = loaded.signatures["serving_default"]
 print(infer.structured_outputs)
 
-prediction = infer(img_tensor)
+class_names = ['Early', 'Benign', 'Pre', 'Pro']
+y_pred = []
+y_test = []
 
-print(prediction)
+for idx, clas in enumerate(class_names):
+    clas_folder = os.path.join('data_test', clas)
+    for image_name in os.listdir(clas_folder):
 
-for i in range(3):
-    print(tf.math.argmax(prediction[f'output_{i}'], axis=1))
+        image = cv2.imread(os.path.join(clas_folder, image_name))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.resize(image, (224, 224)) 
+
+        tensor = tf.convert_to_tensor([image / 255], dtype=tf.float32)
+
+        pred = infer(tensor)
+        pred = tf.math.argmax(pred['result'], axis=1).numpy()
+
+        y_test.append(idx)
+        y_pred.append(pred[0])
+
+print(tf.math.confusion_matrix(y_test, y_pred).numpy())
