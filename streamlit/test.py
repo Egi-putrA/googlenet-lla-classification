@@ -9,12 +9,13 @@ image_names = []
 for img in os.listdir('data_test'):
     image = cv2.imread(f'data_test/{img}')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = image / 255
+    image = image
     
     images.append(image)
     image_names.append(f'data_test/{img}')
 
-img_tensor = tf.convert_to_tensor(images, dtype=tf.float32)
+# img_tensor = tf.convert_to_tensor(images, dtype=tf.float32)
+img_tensor = np.array(images, dtype=np.uint8)
 
 print(img_tensor.shape)
 print(image_names)
